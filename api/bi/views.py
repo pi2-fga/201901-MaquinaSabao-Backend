@@ -3,6 +3,7 @@ import requests
 import re
 from bs4 import BeautifulSoup as bs
 from rest_framework.decorators import api_view
+from rest_framework.response import Response
 
 # Create your views here.
 
