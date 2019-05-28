@@ -91,17 +91,22 @@ def cheaper_soda_ml():
     return cheaper_product 
 
 @api_view(['GET'])
-def get_cheaper_soda():
+def get_cheaper_soda(request):
     cheaper_americanas = cheaper_soda_americanas()
     cheaper_ml = cheaper_soda_ml()
-    
-    if (cheaper_americanas['item_price']/cheaper_americanas['item_weight']) < (cheaper_ml['item_price']/cheaper_ml['item_weight']):
-        return Response(cheaper_americanas)
+    if cheaper_americanas['item_description'] == '' and cheaper_ml['item_description'] == '':
+        return Response(status=400)
     else:
-        return Response(cheaper_ml)
+        if (cheaper_americanas['item_price']/cheaper_americanas['item_weight']) < (cheaper_ml['item_price']/cheaper_ml['item_weight']):
+            return Response(cheaper_americanas, status=200)
+        else:
+            return Response(cheaper_ml, status=200)
+
+
+
 
 @api_view(['GET'])
-def get_cheaper_alcohol_ml():
+def get_cheaper_alcohol_ml(request):
     mercado_livre_url = requests.get("https://lista.mercadolivre.com.br/%C3%A1lcool-l%C3%ADquido-92.8")
 
     soup = bs(mercado_livre_url.content, 'html.parser')
@@ -137,4 +142,7 @@ def get_cheaper_alcohol_ml():
             cheaper_product['item_price'] = item_price
             cheaper_product['item_link'] = item_link
 
-    return Response(cheaper_product) 
+    if cheaper_product['item_description'] == '':
+        return Response(status=400)
+    else:
+        return Response(cheaper_product, status=200) 

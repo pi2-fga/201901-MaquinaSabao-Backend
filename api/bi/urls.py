@@ -15,9 +15,9 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include 
+from .views import *
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('', include('user.urls')),
-    path('', include('bi.urls'))
+    path('get_cheaper_alcohol_ml/', get_cheaper_alcohol_ml),
+    path('get_cheaper_soda/', get_cheaper_soda)
 ]
