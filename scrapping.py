@@ -11,48 +11,207 @@ from bs4 import BeautifulSoup as bs
 
 # for item in product_list:
 #     item_name = item.get('name')
-#     item_price = str(item.select_one(
-#         "div.ColUI-sc-1ey7nd2-0 > div:nth-child(1) > div:nth-child(2) > a:nth-child(1) > section:nth-child(1) > div:nth-child(3) > div:nth-child(2) > div:nth-child(3) > span:nth-child(1)").text)
+#     if item.select_one("div.product-grid-item > div:nth-child(1) > div:nth-child(2) > a:nth-child(1) > section:nth-child(1) > div:nth-child(3) > div:nth-child(2) > div:nth-child(3) > span:nth-child(1)"):
+#         item_price = float(re.search(r'R\$\s*(\d{1,5}\,\d{1,2})', item.select_one("div.product-grid-item > div:nth-child(1) > div:nth-child(2) > a:nth-child(1) > section:nth-child(1) > div:nth-child(3) > div:nth-child(2) > div:nth-child(3) > span:nth-child(1)").text).group(1).replace(',','.'))
+    
 #     item_weight = 0
-#     item_concentration = str(re.search(r'9(8|9)\%', item_name))
+#     item_concentration = ''
+#     if re.search(r'9(8|9)\%', item_name):
+#         item_concentration = str(re.search(r'9(8|9)\%', item_name).group(0))
 #     if re.search(r'((\d{1,3})\s*([Kk][Gg][Ss]?|[Gg]))', item_name) and re.search(r'((\d{1,3})\s*([Kk][Gg][Ss]?|[Gg]))', item_name).group(3) == ("G" or "g"):
 #         item_weight = float(re.search(
 #             r'((\d{1,3})\s*([Kk][Gg][Ss]?|[Gg]))', item_name).group(2))/100
     
-#     elif re.search(r'((\d{1,3})\s*([Kk][Gg][Ss]?|[Gg]))', item_name):
+#     if re.search(r'((\d{1,3})\s*([Kk][Gg][Ss]?|[Gg]))', item_name):
 #         item_weight = float(re.search(r'((\d{1,3})\s*([Kk][Gg][Ss]?|[Gg]))', item_name).group(2))
 
-#     if (item_name or item_weight or item_price or item_concentration) is not None:
-#         print(item_name + " : " + str(item_weight) + " : " + item_concentration + " : " + item_price)
+#     if (item_name or itefdm_weight or item_price or item_concentration) is not None:
+#         print(item_name + " : " + str(item_weight) + " : " + item_concentration + " : " + str(item_price))
     
-mercado_livre_url = requests.get(
-    "https://lista.mercadolivre.com.br/soda-caustica")
+# mercado_livre_url = requests.get(
+#     "https://lista.mercadolivre.com.br/soda-caustica")
 
-soup = bs(mercado_livre_url.content, 'html.parser')
+# soup = bs(mercado_livre_url.content, 'html.parser')
 
-product_list = soup.select("li.results-item")
+# product_list = soup.select("li.results-item")
 
-for item in product_list:
-    item_name = item.select_one('span', class_='main-title').text
-    if item.find(class_='price__decimals'):
-        item_price = float(item.find(class_='price__fraction').text + \
-            '.' + item.find(class_='price__decimals').text)
-    else:
-        item_price = float(item.find(class_='price__fraction').text)
-    item_weight = 0
-    item_concentration = ''
-    if re.search(r'9(8|9)\%', item_name):
-        item_concentration = str(re.search(r'9(8|9)\%', item_name).group(0))
+# for item in product_list:
+#     item_name = item.select_one('span', class_='main-title').text
+#     if item.find(class_='price__decimals'):
+#         item_price = float(item.find(class_='price__fraction').text + \
+#             '.' + item.find(class_='price__decimals').text)
+#     else:
+#         item_price = float(item.find(class_='price__fraction').text)
+#     item_weight = 0
+#     item_concentration = ''
+#     if re.search(r'9(8|9)\%', item_name):
+#         item_concentration = str(re.search(r'9(8|9)\%', item_name).group(0))
     
-    if re.search(r'((\d{1,3})\s*([Kk][Gg][Ss]?|[Gg]))', item_name) and re.search(r'((\d{1,3})\s*([Kk][Gg][Ss]?|[Gg]))', item_name).group(3) == ("G" or "g"):
-        item_weight = float(re.search(r'((\d{1,3})\s*([Kk][Gg][Ss]?|[Gg]))', item_name).group(2))/100
+#     if re.search(r'((\d{1,3})\s*([Kk][Gg][Ss]?|[Gg]))', item_name):
+#         if re.search(r'((\d{1,3})\s*([Kk][Gg][Ss]?|[Gg]))', item_name).group(3) == ("G" or "g"):
+#             item_weight = float(re.search(r'((\d{1,3})\s*([Kk][Gg][Ss]?|[Gg]))', item_name).group(2))/100
+#         else:
+#             item_weight = float(re.search(r'((\d{1,3})\s*([Kk][Gg][Ss]?|[Gg]))', item_name).group(2))
+#         if re.search(r'(\d+)[x|X]', item_name):
+#             item_weight = float(re.search(r'(\d+)[x|X]', item_name).group(1)) * item_weight
 
-    elif re.search(r'((\d{1,3})\s*([Kk][Gg][Ss]?|[Gg]))', item_name):
-        item_weight = float(re.search(r'((\d{1,3})\s*([Kk][Gg][Ss]?|[Gg]))', item_name).group(2))
+#     if item.select_one("div:nth-child(2) > div:nth-child(1) > h2:nth-child(1) > a:nth-child(1)"):
+#         item_link = item.select_one("div:nth-child(2) > div:nth-child(1) > h2:nth-child(1) > a:nth-child(1)")['href']
+
+
+#     if item_name and item_weight and item_price and item_concentration and item_link:
+#         print(item_name + " : " + str(item_weight) + " : " + item_concentration + " : " + str(item_price) + ' : ' + item_link)
+
+# mercado_livre_url = requests.get("https://lista.mercadolivre.com.br/%C3%A1lcool-l%C3%ADquido-92.8")
+
+# soup = bs(mercado_livre_url.content, 'html.parser')
+
+# product_list = soup.select("li.results-item")
+
+# for item in product_list:
+#     item_name = item.select_one('span', class_='main-title').text
+#     item_concentration = None
+#     item_volume = None
+
+#     if item.find(class_='price__decimals'):
+#         item_price = float(item.find(class_='price__fraction').text + \
+#             '.' + item.find(class_='price__decimals').text)
+#     else:
+#         item_price = float(item.find(class_='price__fraction').text)
     
-    if re.search(r'(\d+)[x|X]', item_name):
-        item_weight = float(re.search(r'(\d+)[x|X]', item_name).group(1)) * item_weight
+#     if re.search(r'(92\,?\.?8?)', item_name):
+#         item_concentration = str(re.search(r'(92\,?\.?8?)', item_name).group(0))
+    
+#     if re.search(r'(\d{1,4})\s?((Litros)|(LITROS)|l|L)\s', item_name):
+#         item_volume = float(re.search(r'(\d{1,4})\s?((Litros)|(LITROS)|l|L)\s', item_name).group(1))
 
-    if (item_name or item_weight or item_price or item_concentration) is not None:
-        print(item_name + " : " + str(item_weight) + " : " + item_concentration + " : " + str(item_price))
+#     if item.select_one("div:nth-child(2) > div:nth-child(1) > h2:nth-child(1) > a:nth-child(1)"):
+#         item_link = item.select_one("div:nth-child(2) > div:nth-child(1) > h2:nth-child(1) > a:nth-child(1)")['href']
+    
+#     if item_name and item_price and item_concentration and item_volume:
+#         print(item_name + " : " + str(item_volume) + " : " + item_concentration + " : " + str(item_price) + ' : ' + item_link)
 
+
+def fill_products_list_americanas():
+    lojas_americanas_url = requests.get("https://www.americanas.com.br/busca/soda-caustica")
+
+    soup = bs(lojas_americanas_url.content, 'html.parser')
+
+    product_list = soup.select("div.product-grid-item > div:nth-child(1)")
+
+    cheaper_product = {'item_description':'','item_weight':1, 'item_concentration':'', 'item_price':100,'item_link':''}
+
+    for item in product_list:
+        item_name = item.get('name')
+        item_concentration = None
+        item_weight = None
+        if item.select_one("div.product-grid-item > div:nth-child(1) > div:nth-child(2) > a:nth-child(1) > section:nth-child(1) > div:nth-child(3) > div:nth-child(2) > div:nth-child(3) > span:nth-child(1)"):
+            item_price = float(re.search(r'R\$\s*(\d{1,5}\,\d{1,2})', item.select_one("div.product-grid-item > div:nth-child(1) > div:nth-child(2) > a:nth-child(1) > section:nth-child(1) > div:nth-child(3) > div:nth-child(2) > div:nth-child(3) > span:nth-child(1)").text).group(1).replace(',','.'))
+
+        if re.search(r'9(8|9)\%', item_name):
+            item_concentration = str(re.search(r'9(8|9)\%', item_name).group(0))
+
+        if re.search(r'((\d{1,3})\s*([Kk][Gg][Ss]?|[Gg]))', item_name):
+            if re.search(r'((\d{1,3})\s*([Kk][Gg][Ss]?|[Gg]))', item_name).group(3) == ("G" or "g"):
+                item_weight = float(re.search(
+                    r'((\d{1,3})\s*([Kk][Gg][Ss]?|[Gg]))', item_name).group(2))/100
+            else:
+                item_weight = float(re.search(r'((\d{1,3})\s*([Kk][Gg][Ss]?|[Gg]))', item_name).group(2))
+            if re.search(r'(\d+)[x|X]', item_name):
+                item_weight = float(re.search(r'(\d+)[x|X]', item_name).group(1)) * item_weight
+        
+        if item.select_one('div.product-grid-item > div:nth-child(1) > div:nth-child(2) > a:nth-child(1)')['href']:
+            item_link = "https://www.americanas.com.br" + item.select_one('div.product-grid-item > div:nth-child(1) > div:nth-child(2) > a:nth-child(1)')['href']
+
+        if (item_name and item_price and item_concentration and item_weight) and ((item_price/item_weight) < (cheaper_product['item_price']/cheaper_product['item_weight'])):
+            cheaper_product['item_description'] = item_name
+            cheaper_product['item_weight'] = item_weight
+            cheaper_product['item_concentration'] = item_concentration
+            cheaper_product['item_price'] = item_price
+            cheaper_product['item_link'] = item_link
+
+    return cheaper_product     
+
+def fill_products_list_ml():
+    mercado_livre_url = requests.get("https://lista.mercadolivre.com.br/soda-caustica")
+
+    soup = bs(mercado_livre_url.content, 'html.parser')
+
+    product_list = soup.select("li.results-item")
+
+    cheaper_product = {'item_description':'','item_weight':1, 'item_concentration':'', 'item_price':100,'item_link':''}
+
+    for item in product_list:
+        item_name = item.select_one('span', class_='main-title').text
+        item_concentration = None
+        item_weight = None
+
+        if item.find(class_='price__decimals'):
+            item_price = float(item.find(class_='price__fraction').text + \
+                '.' + item.find(class_='price__decimals').text)
+        else:
+            item_price = float(item.find(class_='price__fraction').text)
+        
+        if re.search(r'9(8|9)\%', item_name):
+            item_concentration = str(re.search(r'9(8|9)\%', item_name).group(0))
+        
+        if re.search(r'((\d{1,3})\s*([Kk][Gg][Ss]?|[Gg]))', item_name):
+            if re.search(r'((\d{1,3})\s*([Kk][Gg][Ss]?|[Gg]))', item_name).group(3) == ("G" or "g"):
+                item_weight = float(re.search(r'((\d{1,3})\s*([Kk][Gg][Ss]?|[Gg]))', item_name).group(2))/100
+            else:
+                item_weight = float(re.search(r'((\d{1,3})\s*([Kk][Gg][Ss]?|[Gg]))', item_name).group(2))
+            if re.search(r'(\d+)[x|X]', item_name):
+                item_weight = float(re.search(r'(\d+)[x|X]', item_name).group(1)) * item_weight
+
+        if item.select_one("div:nth-child(2) > div:nth-child(1) > h2:nth-child(1) > a:nth-child(1)"):
+            item_link = item.select_one("div:nth-child(2) > div:nth-child(1) > h2:nth-child(1) > a:nth-child(1)")['href']
+        
+        if (item_name and item_price and item_concentration and item_weight) and ((item_price/item_weight) < (cheaper_product['item_price']/cheaper_product['item_weight'])):
+            cheaper_product['item_description'] = item_name
+            cheaper_product['item_weight'] = item_weight
+            cheaper_product['item_concentration'] = item_concentration
+            cheaper_product['item_price'] = item_price
+            cheaper_product['item_link'] = item_link
+
+    return cheaper_product 
+
+def fill_products_list_ml_a():
+    mercado_livre_url = requests.get("https://lista.mercadolivre.com.br/%C3%A1lcool-l%C3%ADquido-92.8")
+
+    soup = bs(mercado_livre_url.content, 'html.parser')
+
+    product_list = soup.select("li.results-item")
+
+    cheaper_product = {'item_description':'','item_volume':1, 'item_concentration':'', 'item_price':100,'item_link':''}
+
+    for item in product_list:
+        item_name = item.select_one('span', class_='main-title').text
+        item_concentration = None
+        item_volume = None
+
+        if item.find(class_='price__decimals'):
+            item_price = float(item.find(class_='price__fraction').text + \
+                '.' + item.find(class_='price__decimals').text)
+        else:
+            item_price = float(item.find(class_='price__fraction').text)
+        
+        if re.search(r'(92\,?\.?8?)', item_name):
+            item_concentration = str(re.search(r'(92\,?\.?8?)', item_name).group(0))
+        
+        if re.search(r'(\d{1,4})\s?((Litros)|(LITROS)|l|L)\s', item_name):
+            item_volume = float(re.search(r'(\d{1,4})\s?((Litros)|(LITROS)|l|L)\s', item_name).group(1))
+
+        if item.select_one("div:nth-child(2) > div:nth-child(1) > h2:nth-child(1) > a:nth-child(1)"):
+            item_link = item.select_one("div:nth-child(2) > div:nth-child(1) > h2:nth-child(1) > a:nth-child(1)")['href']
+        
+        if (item_name and item_price and item_concentration and item_volume) and ((item_price/item_volume) < (cheaper_product['item_price']/cheaper_product['item_volume'])):
+            cheaper_product['item_description'] = item_name
+            cheaper_product['item_volume'] = item_volume
+            cheaper_product['item_concentration'] = item_concentration
+            cheaper_product['item_price'] = item_price
+            cheaper_product['item_link'] = item_link
+
+    return cheaper_product 
+
+cheaper = fill_products_list_ml_a()
+print(cheaper)
