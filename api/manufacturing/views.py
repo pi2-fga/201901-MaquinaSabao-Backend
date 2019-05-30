@@ -1,6 +1,7 @@
 from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework.decorators import api_view
 from .models import Manufacturing
 from .serializers import ManufacturingSerializer
 
@@ -17,67 +18,73 @@ from keras.preprocessing import image
 import numpy as np
 import pickle
 
+@api_view(['GET'])
 def training_oil_quality(request):
 
-    # Convolutional Neural Network
+    try:
+        # Convolutional Neural Network
 
-    # Part 1 - Building the CNN
+        # Part 1 - Building the CNN
 
-    # Initialising the CNN
-    classifier = Sequential()
+        # Initialising the CNN
+        classifier = Sequential()
 
-    # Step 1 - Convolution
-    classifier.add(Conv2D(32, (3, 3), input_shape = (64, 64, 3), activation = 'relu'))
+        # Step 1 - Convolution
+        classifier.add(Conv2D(32, (3, 3), input_shape = (64, 64, 3), activation = 'relu'))
 
-    # Step 2 - Pooling
-    classifier.add(MaxPooling2D(pool_size = (2, 2)))
+        # Step 2 - Pooling
+        classifier.add(MaxPooling2D(pool_size = (2, 2)))
 
-    # Adding a second convolutional layer
-    classifier.add(Conv2D(32, (3, 3), activation = 'relu'))
-    classifier.add(MaxPooling2D(pool_size = (2, 2)))
+        # Adding a second convolutional layer
+        classifier.add(Conv2D(32, (3, 3), activation = 'relu'))
+        classifier.add(MaxPooling2D(pool_size = (2, 2)))
 
-    # Step 3 - Flattening
-    classifier.add(Flatten())
+        # Step 3 - Flattening
+        classifier.add(Flatten())
 
-    # Step 4 - Full connection
-    classifier.add(Dense(units = 128, activation = 'relu'))
-    classifier.add(Dense(units = 32, activation = 'relu'))
+        # Step 4 - Full connection
+        classifier.add(Dense(units = 128, activation = 'relu'))
+        classifier.add(Dense(units = 32, activation = 'relu'))
 
-    classifier.add(Dense(units = 1, activation = 'sigmoid'))
+        classifier.add(Dense(units = 1, activation = 'sigmoid'))
 
-    classifier.add(Dropout(rate=0.2))
-    # Compiling the CNN
-    classifier.compile(optimizer = 'adam', loss = 'binary_crossentropy', metrics = ['accuracy'])
+        classifier.add(Dropout(rate=0.2))
+        # Compiling the CNN
+        classifier.compile(optimizer = 'adam', loss = 'binary_crossentropy', metrics = ['accuracy'])
 
-    # Part 2 - Fitting the CNN to the images
+        # Part 2 - Fitting the CNN to the images
 
-    train_datagen = ImageDataGenerator(rescale = 1./255,
-                                    shear_range = 0.2,
-                                    zoom_range = 0.2,
-                                    horizontal_flip = True)
+        train_datagen = ImageDataGenerator(rescale = 1./255,
+                                        shear_range = 0.2,
+                                        zoom_range = 0.2,
+                                        horizontal_flip = True)
 
-    test_datagen = ImageDataGenerator(rescale = 1./255)
+        test_datagen = ImageDataGenerator(rescale = 1./255)
 
-    training_set = train_datagen.flow_from_directory('dataset/training_oil_dataset',
+        training_set = train_datagen.flow_from_directory('./manufacturing/dataset/training_oil_dataset',
+                                                        target_size = (64, 64),
+                                                        batch_size = 32,
+                                                        class_mode = 'binary')
+                                                        
+        test_set = test_datagen.flow_from_directory('./manufacturing/dataset/test_oil_dataset',
                                                     target_size = (64, 64),
                                                     batch_size = 32,
                                                     class_mode = 'binary')
-                                                    
-    test_set = test_datagen.flow_from_directory('dataset/test_oil_dataset',
-                                                target_size = (64, 64),
-                                                batch_size = 32,
-                                                class_mode = 'binary')
 
-    classifier.fit_generator(training_set,
-                            steps_per_epoch = 2,
-                            epochs = 10,
-                            validation_data = test_set,
-                            validation_steps = 1)
+        classifier.fit_generator(training_set,
+                                steps_per_epoch = len(Manufacturing.objects.all()),
+                                epochs = 10,
+                                validation_data = test_set,
+                                validation_steps = 1)
 
-    # ========= MODELO SALVO ===============
-    filename = 'training_result/savemodel.sav'
-    pickle.dump(classifier, open(filename, 'wb'))
+        # ========= SALVANDO MODELO ===============
+        filename = './training_oil_savemodel.sav'
+        pickle.dump(classifier, open(filename, 'wb'))
 
+        return Response(status=200)
+    
+    except Exception as e :
+        return Response(status=400)
 
 def predict(request):
     pass

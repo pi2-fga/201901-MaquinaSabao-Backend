@@ -1,5 +1,6 @@
 from django.db import models
 import os, os.path
+import shutil
 
 # Create your models here.
 class Manufacturing(models.Model):
@@ -14,21 +15,23 @@ class Manufacturing(models.Model):
     oil_image = models.ImageField(upload_to='static/oil_images/')
 
     def reallocate_image(self):
-        image = open('static/oil_images/' + self.oil_image.name, 'rb').read()
-        
+        image = self.oil_image.read()
+
         if(self.oil_quality == 'GOOD'):
-            good_folder = open('dataset/training_oil_dataset/good_oil/good_oil_' + len(os.listdir('dataset/training_oil_dataset/good_oil/')) + '.jpg', 'wb')
-            good_folder.write(image)
+            new_path = './manufacturing/dataset/training_oil_dataset/good_oil/good_oil_' + str(len(os.listdir('./manufacturing/dataset/training_oil_dataset/good_oil/')) + 1) + '.jpg'
+            shutil.move(self.oil_image.name, new_path)
+            oil_image = new_path
 
         if(self.oil_quality == 'BAD'):
-            good_folder = open('dataset/training_oil_dataset/bad_oil/bad_oil_' + len(os.listdir('dataset/training_oil_dataset/bad_oil/')) + '.jpg', 'wb')
-            good_folder.write(image)
+            new_path = './manufacturing/dataset/training_oil_dataset/bad_oil/bad_oil_' + str(len(os.listdir('./manufacturing/dataset/training_oil_dataset/bad_oil/')) + 1) + '.jpg'     
+            shutil.move(self.oil_image.name, new_path)
+            oil_image = new_path
 
         if(self.oil_quality == 'MEDIUM'):
-            good_folder = open('dataset/training_oil_dataset/medium_oil/medium_oil_' + len(os.listdir('dataset/training_oil_dataset/medium_oil/')) + '.jpg', 'wb')
-            good_folder.write(image)
-
+            new_path = './manufacturing/dataset/training_oil_dataset/medium_oil/medium_oil_' + str(len(os.listdir('./manufacturing/dataset/training_oil_dataset/medium_oil/')) + 1) + '.jpg'
+            shutil.move(self.oil_image.name, new_path)
+            oil_image = new_path
 
     def save(self, *args, **kwargs):
-        super(Manufacturing, self).save(*args, **kwargs)
         self.reallocate_image()
+        super(Manufacturing, self).save(*args, **kwargs)
