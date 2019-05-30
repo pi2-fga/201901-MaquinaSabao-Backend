@@ -20,18 +20,20 @@ class Manufacturing(models.Model):
         if(self.oil_quality == 'GOOD'):
             new_path = './manufacturing/dataset/training_oil_dataset/good_oil/good_oil_' + str(len(os.listdir('./manufacturing/dataset/training_oil_dataset/good_oil/')) + 1) + '.jpg'
             shutil.move(self.oil_image.name, new_path)
-            oil_image = new_path
+            self.oil_image = new_path
 
         if(self.oil_quality == 'BAD'):
             new_path = './manufacturing/dataset/training_oil_dataset/bad_oil/bad_oil_' + str(len(os.listdir('./manufacturing/dataset/training_oil_dataset/bad_oil/')) + 1) + '.jpg'     
             shutil.move(self.oil_image.name, new_path)
-            oil_image = new_path
+            self.oil_image = new_path
 
         if(self.oil_quality == 'MEDIUM'):
             new_path = './manufacturing/dataset/training_oil_dataset/medium_oil/medium_oil_' + str(len(os.listdir('./manufacturing/dataset/training_oil_dataset/medium_oil/')) + 1) + '.jpg'
             shutil.move(self.oil_image.name, new_path)
-            oil_image = new_path
+            self.oil_image = new_path
+        
+        super(Manufacturing, self).save(force_update=True)
 
     def save(self, *args, **kwargs):
-        self.reallocate_image()
         super(Manufacturing, self).save(*args, **kwargs)
+        self.reallocate_image()
