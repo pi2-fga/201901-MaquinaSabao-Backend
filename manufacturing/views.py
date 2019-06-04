@@ -17,6 +17,7 @@ from keras.preprocessing.image import ImageDataGenerator
 from keras.preprocessing import image
 import numpy as np
 import pickle
+import os
 
 @api_view(['GET'])
 def training_oil_quality(request):
@@ -65,7 +66,7 @@ def training_oil_quality(request):
                                                         target_size = (64, 64),
                                                         batch_size = 32,
                                                         class_mode = 'binary')
-                                                        
+
         test_set = test_datagen.flow_from_directory('./manufacturing/dataset/test_oil_dataset',
                                                     target_size = (64, 64),
                                                     batch_size = 32,
@@ -82,11 +83,11 @@ def training_oil_quality(request):
         pickle.dump(classifier, open(filename, 'wb'))
 
         return Response(status=200)
-    
+
     except Exception as e :
         return Response(status=400)
 
-@api_view(['GET'])
+@api_view(['POST'])
 def predict_oil_quality(request):
     try:
         train_datagen = ImageDataGenerator(rescale = 1./255,
@@ -111,7 +112,8 @@ def predict_oil_quality(request):
         loss, metric = loaded_model.evaluate_generator(generator=test_set, steps=80)
         print("Acurácia:" + str(metric))
 
-        request_image = request.data['oil_image']
+        request_image = request.FILES['photo']
+
         test_image = image.load_img(request_image, target_size=(64, 64))
         test_image = image.img_to_array(test_image)
         test_image = np.expand_dims(test_image, axis = 0)
@@ -124,11 +126,11 @@ def predict_oil_quality(request):
             prediction = "GOOD"
         else:
             prediction = "MEDIUM"
-        
+
         print("first single prediction is: ", prediction)
 
         return Response(data=prediction, status=200)
-    except Exception as e:
+    except Exception() as e:
         return Response(status=400)
 
 class ManufacturingCreateList(APIView):
@@ -143,5 +145,5 @@ class ManufacturingCreateList(APIView):
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=201)
-        
+
         return Response(serializer.errors, status=400)
