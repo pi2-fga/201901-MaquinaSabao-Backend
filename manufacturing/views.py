@@ -73,7 +73,7 @@ def training_oil_quality(request):
                                                     class_mode = 'binary')
 
         classifier.fit_generator(training_set,
-                                steps_per_epoch = len(Manufacturing.objects.all()),
+                                steps_per_epoch = 10,
                                 epochs = 10,
                                 validation_data = test_set,
                                 validation_steps = 1)
@@ -112,20 +112,26 @@ def predict_oil_quality(request):
         loss, metric = loaded_model.evaluate_generator(generator=test_set, steps=80)
         print("Acurácia:" + str(metric))
 
+        # Comente essa linha para testes com o script 'predictImage.sh'
         request_image = request.FILES['photo']
+
+        # Descomente essa linha para testes com o script 'predictImage.sh'
+        # request_image = request.data['photo']
 
         test_image = image.load_img(request_image, target_size=(64, 64))
         test_image = image.img_to_array(test_image)
         test_image = np.expand_dims(test_image, axis = 0)
         result = loaded_model.predict(test_image)
-        training_set.class_indices
+        print(training_set.class_indices)
 
         if result[0][0] == 0:
             prediction = "BAD"
         elif result[0][0] == 1:
             prediction = "GOOD"
-        else:
+        elif result[0][0] == 2:
             prediction = "MEDIUM"
+        else:
+            prediction = "NO OIL"
 
         print("first single prediction is: ", prediction)
 

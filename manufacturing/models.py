@@ -32,6 +32,11 @@ class Manufacturing(models.Model):
             shutil.move(self.oil_image.name, new_path)
             self.oil_image = new_path
         
+        if(self.oil_quality == 'NO OIL'):
+            new_path = './manufacturing/dataset/training_oil_dataset/no_oil/no_oil_' + str(len(os.listdir('./manufacturing/dataset/training_oil_dataset/no_oil/')) + 1) + '.jpg'
+            shutil.move(self.oil_image.name, new_path)
+            self.oil_image = new_path
+
         super(Manufacturing, self).save(force_update=True)
 
     def save(self, *args, **kwargs):
