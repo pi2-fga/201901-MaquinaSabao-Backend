@@ -15,9 +15,11 @@ from keras.layers import LeakyReLU
 from keras.layers import Dropout
 from keras.preprocessing.image import ImageDataGenerator
 from keras.preprocessing import image
+from keras import backend as K
 import numpy as np
 import pickle
 import os
+import tensorflow as tf
 
 @api_view(['GET'])
 def training_oil_quality(request):
@@ -38,6 +40,10 @@ def training_oil_quality(request):
 
         # Adding a second convolutional layer
         classifier.add(Conv2D(32, (3, 3), activation = 'relu'))
+        classifier.add(MaxPooling2D(pool_size = (2, 2)))
+
+        # Adding a third convolutional layer
+        classifier.add(Conv2D(128, (3, 3), activation = 'relu'))
         classifier.add(MaxPooling2D(pool_size = (2, 2)))
 
         # Step 3 - Flattening
@@ -73,10 +79,10 @@ def training_oil_quality(request):
                                                     class_mode = 'binary')
 
         classifier.fit_generator(training_set,
-                                steps_per_epoch = 10,
-                                epochs = 10,
+                                steps_per_epoch = 30,
+                                epochs = 15,
                                 validation_data = test_set,
-                                validation_steps = 1)
+                                validation_steps = 10)
 
         # ========= SALVANDO MODELO ===============
         filename = './training_oil_savemodel.sav'
@@ -108,20 +114,24 @@ def predict_oil_quality(request):
                                                     class_mode = 'binary')
 
         filename = './training_oil_savemodel.sav'
-        loaded_model = pickle.load(open(filename, 'rb'))
+        load_model(filename)
         loss, metric = loaded_model.evaluate_generator(generator=test_set, steps=80)
         print("Acurácia:" + str(metric))
 
         # Comente essa linha para testes com o script 'predictImage.sh'
-        request_image = request.FILES['photo']
+        # request_image = request.FILES['photo']
 
         # Descomente essa linha para testes com o script 'predictImage.sh'
-        # request_image = request.data['photo']
+        request_image = request.data['photo']
 
         test_image = image.load_img(request_image, target_size=(64, 64))
         test_image = image.img_to_array(test_image)
         test_image = np.expand_dims(test_image, axis = 0)
-        result = loaded_model.predict(test_image)
+
+        with graph.as_default():
+            result = loaded_model.predict(test_image)
+        # K.clear_session()
+
         print(training_set.class_indices)
 
         if result[0][0] == 0:
@@ -139,6 +149,14 @@ def predict_oil_quality(request):
     except Exception() as e:
         return Response(status=400)
 
+def load_model(filename):
+    global loaded_model
+    loaded_model = pickle.load(open(filename, 'rb'))
+    global graph
+    graph = tf.get_default_graph()
+
+    return loaded_model
+ 
 class ManufacturingCreateList(APIView):
 
     def get(self, request, format=None):
