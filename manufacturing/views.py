@@ -23,13 +23,10 @@ import tensorflow as tf
 
 from sklearn import svm, preprocessing, neighbors
 from numpy import genfromtxt
-import pandas as pd
 from sklearn.naive_bayes import GaussianNB
 from sklearn.linear_model import SGDClassifier
 from sklearn.svm import LinearSVC
 from sklearn.ensemble import RandomForestClassifier
-from invoice2data import extract_data
-from tabula import read_pdf
 from sklearn.ensemble import AdaBoostClassifier
 import math
 from sklearn.model_selection import RandomizedSearchCV
@@ -92,10 +89,10 @@ def training_oil_quality(request):
                                                     class_mode = 'binary')
 
         classifier.fit_generator(training_set,
-                                steps_per_epoch = 30,
-                                epochs = 15,
+                                steps_per_epoch = 200,
+                                epochs = 10,
                                 validation_data = test_set,
-                                validation_steps = 10)
+                                validation_steps = 50)
 
         # ========= SALVANDO MODELO ===============
         filename = './training_oil_savemodel.sav'
@@ -104,6 +101,7 @@ def training_oil_quality(request):
         return Response(status=200)
 
     except Exception as e :
+        print("EXCEÇÃO:", e)
         return Response(status=400)
 
 @api_view(['POST'])
@@ -127,25 +125,25 @@ def predict_oil_quality(request):
                                                     class_mode = 'binary')
 
         filename = './training_oil_savemodel.sav'
-        load_model(filename)
+        loaded_model = pickle.load(open(filename, 'rb'))
         loss, metric = loaded_model.evaluate_generator(generator=test_set, steps=80)
         print("Acurácia:" + str(metric))
 
         # Comente essa linha para testes com o script 'predictImage.sh'
-        request_image = request.FILES['photo']
+        # request_image = request.FILES['photo']
 
         # Descomente essa linha para testes com o script 'predictImage.sh'
-        # request_image = request.data['photo']
+        request_image = request.data['photo']
 
-        test_image = image.load_img(request_image, target_size=(64, 64))
+        test_image = image.load_img(request_image, target_size=(64, 64, 3))
         test_image = image.img_to_array(test_image)
         test_image = np.expand_dims(test_image, axis = 0)
 
-        with graph.as_default():
-            result = loaded_model.predict(test_image)
+        result = loaded_model.predict(test_image)
         # K.clear_session()
 
         print(training_set.class_indices)
+        prediction = '?'
 
         if result[0][0] == 0:
             prediction = "BAD"
@@ -161,14 +159,6 @@ def predict_oil_quality(request):
         return Response(data=prediction, status=200)
     except Exception as e:
         return Response(status=400)
-
-def load_model(filename):
-    global loaded_model
-    loaded_model = pickle.load(open(filename, 'rb'))
-    global graph
-    graph = tf.get_default_graph()
-
-    return loaded_model
 
 def random_search(request):
     try:
