@@ -81,9 +81,6 @@ def training_oil_quality(request):
 
     test_datagen = ImageDataGenerator(rescale = 1./255)
 
-<<<<<<< HEAD
-    training_set = train_datagen.flow_from_directory('dataset/training_oil_dataset',
-=======
         training_set = train_datagen.flow_from_directory('./manufacturing/dataset/training_oil_dataset',
                                                         target_size = (64, 64),
                                                         batch_size = 32,
@@ -125,7 +122,6 @@ def predict_oil_quality(request):
                                                         class_mode = 'binary')
 
         test_set = test_datagen.flow_from_directory('./manufacturing/dataset/test_oil_dataset',
->>>>>>> 7cb60d9dc8b5c0f11fe4d9b993299c135909ee03
                                                     target_size = (64, 64),
                                                     batch_size = 32,
                                                     class_mode = 'binary')
@@ -135,28 +131,16 @@ def predict_oil_quality(request):
                                                 batch_size = 32,
                                                 class_mode = 'binary')
 
-<<<<<<< HEAD
-    classifier.fit_generator(training_set,
-                            steps_per_epoch = 2,
-                            epochs = 10,
-                            validation_data = test_set,
-                            validation_steps = 1)
-=======
         filename = './training_oil_savemodel.sav'
         load_model(filename)
         loss, metric = loaded_model.evaluate_generator(generator=test_set, steps=80)
         print("Acurácia:" + str(metric))
->>>>>>> 7cb60d9dc8b5c0f11fe4d9b993299c135909ee03
 
     # ========= MODELO SALVO ===============
     filename = 'training_result/savemodel.sav'
     pickle.dump(classifier, open(filename, 'wb'))
 
 
-<<<<<<< HEAD
-def predict(request):
-    pass
-=======
         test_image = image.load_img(request_image, target_size=(64, 64))
         test_image = image.img_to_array(test_image)
         test_image = np.expand_dims(test_image, axis = 0)
@@ -332,7 +316,6 @@ def random_search(request):
         return Response(status=200)
     except Exception as e: 
         return Response(status=400)
->>>>>>> 7cb60d9dc8b5c0f11fe4d9b993299c135909ee03
 
 
  
