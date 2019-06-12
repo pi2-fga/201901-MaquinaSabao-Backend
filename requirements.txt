@@ -6,3 +6,5 @@ tensorflow
 Pillow
 requests
 beautifulsoup4
+sklearn
+tabula
