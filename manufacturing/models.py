@@ -16,9 +16,9 @@ class Manufacturing(models.Model):
     oil_quality = models.CharField(max_length = 10)
     have_fragrance = models.BooleanField()
     oil_image = models.ImageField(upload_to='static/oil_images/')
-    internet_soap_price = models.DecimalField(decimal_places=8, max_digits=9)
-    internet_soda_price = models.DecimalField(decimal_places=8, max_digits=9)
-    internet_alcohol_price = models.DecimalField(decimal_places=8, max_digits=9)
+    internet_soap_price = models.DecimalField(decimal_places=8, max_digits=12, blank=True)
+    internet_soda_price = models.DecimalField(decimal_places=8, max_digits=12, blank=True)
+    internet_alcohol_price = models.DecimalField(decimal_places=8, max_digits=12, blank=True)
 
     def reallocate_image(self):
         image = open('static/oil_images/' + self.oil_image.name, 'rb').read()
@@ -64,8 +64,8 @@ class Manufacturing(models.Model):
         return (cheaper_product['item_price'] / cheaper_product['item_volume'])
 
     def save(self, *args, **kwargs):
-        soda_price = get_cheaper_soda()
-        alcohol_price = get_cheaper_alcohol_ml()
+        soda_price = requests.get('http://0.0.0.0:8000/get_cheaper_soda/').json()
+        alcohol_price = requests.get('http://0.0.0.0:8000/get_cheaper_alcohol_ml/').json()
         self.internet_soda_price = soda_price['item_price']/soda_price['item_volume']
         self.internet_alcohol_price = alcohol_price['item_price']/alcohol_price['item_volume']
         self.internet_soap_price = self.get_soap_price()

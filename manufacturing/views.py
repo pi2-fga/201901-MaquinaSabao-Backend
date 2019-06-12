@@ -1,5 +1,6 @@
 from django.shortcuts import render
 from rest_framework.views import APIView
+from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from .models import Manufacturing
 from .serializers import ManufacturingSerializer
@@ -17,8 +18,6 @@ from keras.preprocessing import image
 from keras import backend as K
 import numpy as np
 import pickle
-<<<<<<< HEAD
-=======
 import os
 import tensorflow as tf
 
@@ -29,31 +28,30 @@ from sklearn.naive_bayes import GaussianNB
 from sklearn.linear_model import SGDClassifier
 from sklearn.svm import LinearSVC
 from sklearn.ensemble import RandomForestClassifier
-from invoice2data import extract_data
-from tabula import read_pdf
+# from invoice2data import extract_data
+# from tabula import read_pdf
 from sklearn.ensemble import AdaBoostClassifier
 import math
 from sklearn.model_selection import RandomizedSearchCV
->>>>>>> 7cb60d9dc8b5c0f11fe4d9b993299c135909ee03
 
 def training_oil_quality(request):
+    try:
+        # Convolutional Neural Network
 
-    # Convolutional Neural Network
+        # Part 1 - Building the CNN
 
-    # Part 1 - Building the CNN
+        # Initialising the CNN
+        classifier = Sequential()
 
-    # Initialising the CNN
-    classifier = Sequential()
+        # Step 1 - Convolution
+        classifier.add(Conv2D(32, (3, 3), input_shape = (64, 64, 3), activation = 'relu'))
 
-    # Step 1 - Convolution
-    classifier.add(Conv2D(32, (3, 3), input_shape = (64, 64, 3), activation = 'relu'))
+        # Step 2 - Pooling
+        classifier.add(MaxPooling2D(pool_size = (2, 2)))
 
-    # Step 2 - Pooling
-    classifier.add(MaxPooling2D(pool_size = (2, 2)))
-
-    # Adding a second convolutional layer
-    classifier.add(Conv2D(32, (3, 3), activation = 'relu'))
-    classifier.add(MaxPooling2D(pool_size = (2, 2)))
+        # Adding a second convolutional layer
+        classifier.add(Conv2D(32, (3, 3), activation = 'relu'))
+        classifier.add(MaxPooling2D(pool_size = (2, 2)))
 
         # Adding a third convolutional layer
         classifier.add(Conv2D(128, (3, 3), activation = 'relu'))
@@ -62,24 +60,24 @@ def training_oil_quality(request):
         # Step 3 - Flattening
         classifier.add(Flatten())
 
-    # Step 4 - Full connection
-    classifier.add(Dense(units = 128, activation = 'relu'))
-    classifier.add(Dense(units = 32, activation = 'relu'))
+        # Step 4 - Full connection
+        classifier.add(Dense(units = 128, activation = 'relu'))
+        classifier.add(Dense(units = 32, activation = 'relu'))
 
-    classifier.add(Dense(units = 1, activation = 'sigmoid'))
+        classifier.add(Dense(units = 1, activation = 'sigmoid'))
 
-    classifier.add(Dropout(rate=0.2))
-    # Compiling the CNN
-    classifier.compile(optimizer = 'adam', loss = 'binary_crossentropy', metrics = ['accuracy'])
+        classifier.add(Dropout(rate=0.2))
+        # Compiling the CNN
+        classifier.compile(optimizer = 'adam', loss = 'binary_crossentropy', metrics = ['accuracy'])
 
-    # Part 2 - Fitting the CNN to the images
+        # Part 2 - Fitting the CNN to the images
 
-    train_datagen = ImageDataGenerator(rescale = 1./255,
-                                    shear_range = 0.2,
-                                    zoom_range = 0.2,
-                                    horizontal_flip = True)
+        train_datagen = ImageDataGenerator(rescale = 1./255,
+                                        shear_range = 0.2,
+                                        zoom_range = 0.2,
+                                        horizontal_flip = True)
 
-    test_datagen = ImageDataGenerator(rescale = 1./255)
+        test_datagen = ImageDataGenerator(rescale = 1./255)
 
         training_set = train_datagen.flow_from_directory('./manufacturing/dataset/training_oil_dataset',
                                                         target_size = (64, 64),
@@ -126,7 +124,7 @@ def predict_oil_quality(request):
                                                     batch_size = 32,
                                                     class_mode = 'binary')
                                                     
-    test_set = test_datagen.flow_from_directory('dataset/test_oil_dataset',
+        test_set = test_datagen.flow_from_directory('dataset/test_oil_dataset',
                                                 target_size = (64, 64),
                                                 batch_size = 32,
                                                 class_mode = 'binary')
@@ -137,8 +135,8 @@ def predict_oil_quality(request):
         print("Acurácia:" + str(metric))
 
     # ========= MODELO SALVO ===============
-    filename = 'training_result/savemodel.sav'
-    pickle.dump(classifier, open(filename, 'wb'))
+        filename = 'training_result/savemodel.sav'
+        pickle.dump(classifier, open(filename, 'wb'))
 
 
         test_image = image.load_img(request_image, target_size=(64, 64))
