@@ -30,6 +30,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.ensemble import AdaBoostClassifier
 import math
 from sklearn.model_selection import RandomizedSearchCV
+from keras import backend as K
 
 @api_view(['GET'])
 def training_oil_quality(request):
@@ -95,18 +96,25 @@ def training_oil_quality(request):
                                 validation_steps = 50)
 
         # ========= SALVANDO MODELO ===============
-        filename = './training_oil_savemodel.sav'
-        pickle.dump(classifier, open(filename, 'wb'))
+        filename = 'training_oil_savemodel.sav'
+        file = open(filename, 'wb')
+        pickle.dump(classifier, file)
+
+        file.close()
+
 
         return Response(status=200)
 
     except Exception as e :
-        print("EXCEÇÃO:", e)
+        print("error>>>>>")
+        printe(e)
         return Response(status=400)
 
 @api_view(['POST'])
 def predict_oil_quality(request):
     try:
+        K.clear_session()
+
         train_datagen = ImageDataGenerator(rescale = 1./255,
                                         shear_range = 0.2,
                                         zoom_range = 0.2,
@@ -124,8 +132,11 @@ def predict_oil_quality(request):
                                                     batch_size = 32,
                                                     class_mode = 'binary')
 
-        filename = './training_oil_savemodel.sav'
-        loaded_model = pickle.load(open(filename, 'rb'))
+        filename = 'training_oil_savemodel.sav'
+
+        file = open(filename, 'rb')
+        loaded_model = pickle.load(file)
+
         loss, metric = loaded_model.evaluate_generator(generator=test_set, steps=80)
         print("Acurácia:" + str(metric))
 
@@ -156,8 +167,13 @@ def predict_oil_quality(request):
 
         print("first single prediction is: ", prediction)
 
+        file.close()
+
+        K.clear_session()
+
         return Response(data=prediction, status=200)
     except Exception as e:
+        print(e)
         return Response(status=400)
 
 def random_search(request):
@@ -204,8 +220,8 @@ def random_search(request):
         clf = RandomForestClassifier()
 
         rfc = RandomizedSearchCV(
-            estimator = clf, 
-            param_distributions = params, 
+            estimator = clf,
+            param_distributions = params,
             n_iter = 100,
             cv = 3,
             verbose=2,
@@ -300,11 +316,11 @@ def random_search(request):
         print(time)
         print("--------")
         return Response(status=200)
-    except Exception as e: 
+    except Exception as e:
         return Response(status=400)
 
 
- 
+
 class ManufacturingCreateList(APIView):
 
     def get(self, request, format=None):
