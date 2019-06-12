@@ -23,16 +23,14 @@ import tensorflow as tf
 
 from sklearn import svm, preprocessing, neighbors
 from numpy import genfromtxt
-import pandas as pd
 from sklearn.naive_bayes import GaussianNB
 from sklearn.linear_model import SGDClassifier
 from sklearn.svm import LinearSVC
 from sklearn.ensemble import RandomForestClassifier
-from invoice2data import extract_data
-from tabula import read_pdf
 from sklearn.ensemble import AdaBoostClassifier
 import math
 from sklearn.model_selection import RandomizedSearchCV
+from keras import backend as K
 
 @api_view(['GET'])
 def training_oil_quality(request):
@@ -98,17 +96,25 @@ def training_oil_quality(request):
                                 validation_steps = 10)
 
         # ========= SALVANDO MODELO ===============
-        filename = './training_oil_savemodel.sav'
-        pickle.dump(classifier, open(filename, 'wb'))
+        filename = 'training_oil_savemodel.sav'
+        file = open(filename, 'wb')
+        pickle.dump(classifier, file)
+
+        file.close()
+
 
         return Response(status=200)
 
     except Exception as e :
+        print("error>>>>>")
+        printe(e)
         return Response(status=400)
 
 @api_view(['POST'])
 def predict_oil_quality(request):
     try:
+        K.clear_session()
+
         train_datagen = ImageDataGenerator(rescale = 1./255,
                                         shear_range = 0.2,
                                         zoom_range = 0.2,
@@ -126,8 +132,11 @@ def predict_oil_quality(request):
                                                     batch_size = 32,
                                                     class_mode = 'binary')
 
-        filename = './training_oil_savemodel.sav'
-        load_model(filename)
+        filename = 'training_oil_savemodel.sav'
+
+        file = open(filename, 'rb')
+        loaded_model = pickle.load(file)
+
         loss, metric = loaded_model.evaluate_generator(generator=test_set, steps=80)
         print("Acurácia:" + str(metric))
 
@@ -141,8 +150,8 @@ def predict_oil_quality(request):
         test_image = image.img_to_array(test_image)
         test_image = np.expand_dims(test_image, axis = 0)
 
-        with graph.as_default():
-            result = loaded_model.predict(test_image)
+
+        result = loaded_model.predict(test_image)
         # K.clear_session()
 
         print(training_set.class_indices)
@@ -158,17 +167,15 @@ def predict_oil_quality(request):
 
         print("first single prediction is: ", prediction)
 
+        file.close()
+
+        K.clear_session()
+
         return Response(data=prediction, status=200)
     except Exception as e:
+        print(e)
         return Response(status=400)
 
-def load_model(filename):
-    global loaded_model
-    loaded_model = pickle.load(open(filename, 'rb'))
-    global graph
-    graph = tf.get_default_graph()
-
-    return loaded_model
 
 def random_search(request):
     try:
@@ -214,8 +221,8 @@ def random_search(request):
         clf = RandomForestClassifier()
 
         rfc = RandomizedSearchCV(
-            estimator = clf, 
-            param_distributions = params, 
+            estimator = clf,
+            param_distributions = params,
             n_iter = 100,
             cv = 3,
             verbose=2,
@@ -310,11 +317,11 @@ def random_search(request):
         print(time)
         print("--------")
         return Response(status=200)
-    except Exception as e: 
+    except Exception as e:
         return Response(status=400)
 
 
- 
+
 class ManufacturingCreateList(APIView):
 
     def get(self, request, format=None):
