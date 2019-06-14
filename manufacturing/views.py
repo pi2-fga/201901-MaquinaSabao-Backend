@@ -142,10 +142,11 @@ def predict_oil_quality(request):
         loss, metric = loaded_model.evaluate_generator(generator=test_set, steps=80)
         print("Acurácia:" + str(metric))
 
-    # ========= MODELO SALVO ===============
-        filename = 'training_result/savemodel.sav'
-        pickle.dump(classifier, open(filename, 'wb'))
+        # Comente essa linha para testes com o script 'predictImage.sh'
+        request_image = request.FILES['photo']
 
+        # Descomente essa linha para testes com o script 'predictImage.sh'
+        # request_image = request.data['photo']
 
         test_image = image.load_img(request_image, target_size=(64, 64, 3))
         test_image = image.img_to_array(test_image)
