@@ -32,6 +32,8 @@ from sklearn.model_selection import cross_val_score, GridSearchCV
 from sklearn.ensemble import RandomForestRegressor
 from keras import backend as K
 import pandas as pd
+from datetime import datetime, timedelta
+from django.utils import timezone
 
 @api_view(['GET'])
 def training_oil_quality(request):
@@ -253,6 +255,15 @@ def predict_ph(request):
     except Exception as e:
         print(e)
         return Response(status=400)
+
+
+@api_view(['GET'])
+def index_manufacturing_month(request):
+    last_month = datetime.today() - timedelta(days=30)
+    fabrications = Manufacturing.objects.filter(start_of_manufacture__gte= last_month )
+    serializer = ManufacturingSerializer(fabrications, many=True)
+    return Response(serializer.data)
+
 
 
 class ManufacturingCreateList(APIView):
