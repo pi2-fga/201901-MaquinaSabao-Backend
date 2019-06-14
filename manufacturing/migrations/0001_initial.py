@@ -24,6 +24,9 @@ class Migration(migrations.Migration):
                 ('have_fragrance', models.BooleanField()),
                 ('oil_image', models.ImageField(upload_to='static/oil_images/')),
                 ('period', models.IntegerField(blank=True, null=True)),
+                ('internet_soap_price', models.DecimalField(decimal_places=8, max_digits=9)),
+                ('internet_soda_price', models.DecimalField(decimal_places=8, max_digits=9)),
+                ('internet_alcohol_price', models.DecimalField(decimal_places=8, max_digits=9)),
             ],
         ),
     ]

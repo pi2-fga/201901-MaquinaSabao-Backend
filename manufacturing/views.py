@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from rest_framework.views import APIView
-from rest_framework.response import Response
 from rest_framework.decorators import api_view
+from rest_framework.response import Response
 from .models import Manufacturing
 from .serializers import ManufacturingSerializer
 
@@ -26,6 +26,7 @@ from numpy import genfromtxt
 from sklearn.naive_bayes import GaussianNB
 from sklearn.linear_model import SGDClassifier
 from sklearn.svm import LinearSVC
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.ensemble import AdaBoostClassifier
 import math
 from sklearn.model_selection import cross_val_score, GridSearchCV
@@ -35,9 +36,7 @@ import pandas as pd
 from datetime import datetime, timedelta
 from django.utils import timezone
 
-@api_view(['GET'])
 def training_oil_quality(request):
-
     try:
         # Convolutional Neural Network
 
@@ -143,11 +142,10 @@ def predict_oil_quality(request):
         loss, metric = loaded_model.evaluate_generator(generator=test_set, steps=80)
         print("Acurácia:" + str(metric))
 
-        # Comente essa linha para testes com o script 'predictImage.sh'
-        request_image = request.FILES['photo']
+    # ========= MODELO SALVO ===============
+        filename = 'training_result/savemodel.sav'
+        pickle.dump(classifier, open(filename, 'wb'))
 
-        # Descomente essa linha para testes com o script 'predictImage.sh'
-        # request_image = request.data['photo']
 
         test_image = image.load_img(request_image, target_size=(64, 64, 3))
         test_image = image.img_to_array(test_image)
@@ -293,5 +291,5 @@ class ManufacturingCreateList(APIView):
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=201)
-
+        
         return Response(serializer.errors, status=400)
