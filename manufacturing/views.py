@@ -55,7 +55,7 @@ def training_oil_quality(request):
         classifier.add(MaxPooling2D(pool_size = (2, 2)))
 
         # Adding a third convolutional layer
-        classifier.add(Conv2D(128, (3, 3), activation = 'relu'))
+        classifier.add(Conv2D(128, (3, 3), activation = 'tanh'))
         classifier.add(MaxPooling2D(pool_size = (2, 2)))
 
         # Step 3 - Flattening
@@ -65,7 +65,7 @@ def training_oil_quality(request):
         classifier.add(Dense(units = 128, activation = 'relu'))
         classifier.add(Dense(units = 32, activation = 'relu'))
 
-        classifier.add(Dense(units = 1, activation = 'sigmoid'))
+        classifier.add(Dense(units = 3, activation = 'sigmoid'))
 
         classifier.add(Dropout(rate=0.2))
         # Compiling the CNN
@@ -83,18 +83,18 @@ def training_oil_quality(request):
         training_set = train_datagen.flow_from_directory('./manufacturing/dataset/training_oil_dataset',
                                                         target_size = (64, 64),
                                                         batch_size = 32,
-                                                        class_mode = 'binary')
+                                                        class_mode = 'categorical')
 
         test_set = test_datagen.flow_from_directory('./manufacturing/dataset/test_oil_dataset',
                                                     target_size = (64, 64),
                                                     batch_size = 32,
-                                                    class_mode = 'binary')
+                                                    class_mode = 'categorical')
 
         classifier.fit_generator(training_set,
-                                steps_per_epoch = 200,
+                                steps_per_epoch = 100,
                                 epochs = 10,
                                 validation_data = test_set,
-                                validation_steps = 50)
+                                validation_steps = 10)
 
         # ========= SALVANDO MODELO ===============
         filename = 'training_oil_savemodel.sav'
@@ -126,12 +126,12 @@ def predict_oil_quality(request):
         training_set = train_datagen.flow_from_directory('./manufacturing/dataset/training_oil_dataset',
                                                         target_size = (64, 64),
                                                         batch_size = 32,
-                                                        class_mode = 'binary')
+                                                        class_mode = 'categorical')
 
         test_set = test_datagen.flow_from_directory('./manufacturing/dataset/test_oil_dataset',
                                                     target_size = (64, 64),
                                                     batch_size = 32,
-                                                    class_mode = 'binary')
+                                                    class_mode = 'categorical')
 
         filename = 'training_oil_savemodel.sav'
 
@@ -142,29 +142,35 @@ def predict_oil_quality(request):
         print("Acurácia:" + str(metric))
 
         # Comente essa linha para testes com o script 'predictImage.sh'
-        # request_image = request.FILES['photo']
+        request_image = request.FILES['photo']
 
         # Descomente essa linha para testes com o script 'predictImage.sh'
-        request_image = request.data['photo']
+        # request_image = request.data['photo']
 
         test_image = image.load_img(request_image, target_size=(64, 64, 3))
         test_image = image.img_to_array(test_image)
         test_image = np.expand_dims(test_image, axis = 0)
 
         result = loaded_model.predict(test_image)
-        # K.clear_session()
 
         print(training_set.class_indices)
         prediction = '?'
 
-        if result[0][0] == 0:
+        max_value = result[0]
+        max_indice = 0
+
+        # for i in range(len(result)):
+        #     if result[i] > max:
+        #         max_value = result[i]
+        #         max_indice = 0
+
+        if max_indice == 0:
             prediction = "BAD"
-        elif result[0][0] == 1:
+        elif max_indice == 1:
             prediction = "GOOD"
-        elif result[0][0] == 2:
-            prediction = "MEDIUM"
-        else:
+        else: 
             prediction = "NO OIL"
+ 
 
         print("first single prediction is: ", prediction)
 
