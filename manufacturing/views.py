@@ -158,13 +158,22 @@ def predict_oil_quality(request):
         print(training_set.class_indices)
         prediction = '?'
 
-        max_value = result[0]
+        list_result = []
+
+        list_result.append(result[0][0])
+        list_result.append(result[0][1])
+        list_result.append(result[0][2])
+        
+        max_value = result[0][0]
         max_indice = 0
 
-        # for i in range(len(result)):
-        #     if result[i] > max:
-        #         max_value = result[i]
-        #         max_indice = 0
+        for i in range(len(list_result)):
+            if list_result[i] > max_value:
+                max_value = list_result[i]
+                max_indice = i
+
+        print("Resultado:", list_result)
+        print("Maior Índice:", max_indice)
 
         if max_indice == 0:
             prediction = "BAD"
