@@ -103,6 +103,6 @@ venv.bak/
 # mypy
 .mypy_cache/
 
-./manufacturing/*
+/manufacturing/dataset/*
 /static/
 *.sav
