@@ -23,16 +23,18 @@ import tensorflow as tf
 
 from sklearn import svm, preprocessing, neighbors
 from numpy import genfromtxt
-import pandas as pd
 from sklearn.naive_bayes import GaussianNB
 from sklearn.linear_model import SGDClassifier
 from sklearn.svm import LinearSVC
 from sklearn.ensemble import RandomForestClassifier
-# from invoice2data import extract_data
-# from tabula import read_pdf
 from sklearn.ensemble import AdaBoostClassifier
 import math
-from sklearn.model_selection import RandomizedSearchCV
+from sklearn.model_selection import cross_val_score, GridSearchCV
+from sklearn.ensemble import RandomForestRegressor
+from keras import backend as K
+import pandas as pd
+from datetime import datetime, timedelta
+from django.utils import timezone
 
 def training_oil_quality(request):
     try:
@@ -54,7 +56,7 @@ def training_oil_quality(request):
         classifier.add(MaxPooling2D(pool_size = (2, 2)))
 
         # Adding a third convolutional layer
-        classifier.add(Conv2D(128, (3, 3), activation = 'relu'))
+        classifier.add(Conv2D(128, (3, 3), activation = 'tanh'))
         classifier.add(MaxPooling2D(pool_size = (2, 2)))
 
         # Step 3 - Flattening
@@ -64,7 +66,7 @@ def training_oil_quality(request):
         classifier.add(Dense(units = 128, activation = 'relu'))
         classifier.add(Dense(units = 32, activation = 'relu'))
 
-        classifier.add(Dense(units = 1, activation = 'sigmoid'))
+        classifier.add(Dense(units = 3, activation = 'sigmoid'))
 
         classifier.add(Dropout(rate=0.2))
         # Compiling the CNN
@@ -82,31 +84,39 @@ def training_oil_quality(request):
         training_set = train_datagen.flow_from_directory('./manufacturing/dataset/training_oil_dataset',
                                                         target_size = (64, 64),
                                                         batch_size = 32,
-                                                        class_mode = 'binary')
+                                                        class_mode = 'categorical')
 
         test_set = test_datagen.flow_from_directory('./manufacturing/dataset/test_oil_dataset',
                                                     target_size = (64, 64),
                                                     batch_size = 32,
-                                                    class_mode = 'binary')
+                                                    class_mode = 'categorical')
 
         classifier.fit_generator(training_set,
-                                steps_per_epoch = 30,
-                                epochs = 15,
+                                steps_per_epoch = 100,
+                                epochs = 10,
                                 validation_data = test_set,
                                 validation_steps = 10)
 
         # ========= SALVANDO MODELO ===============
-        filename = './training_oil_savemodel.sav'
-        pickle.dump(classifier, open(filename, 'wb'))
+        filename = 'training_oil_savemodel.sav'
+        file = open(filename, 'wb')
+        pickle.dump(classifier, file)
+
+        file.close()
+
 
         return Response(status=200)
 
     except Exception as e :
+        print("error>>>>>")
+        printe(e)
         return Response(status=400)
 
 @api_view(['POST'])
 def predict_oil_quality(request):
     try:
+        K.clear_session()
+
         train_datagen = ImageDataGenerator(rescale = 1./255,
                                         shear_range = 0.2,
                                         zoom_range = 0.2,
@@ -117,20 +127,18 @@ def predict_oil_quality(request):
         training_set = train_datagen.flow_from_directory('./manufacturing/dataset/training_oil_dataset',
                                                         target_size = (64, 64),
                                                         batch_size = 32,
-                                                        class_mode = 'binary')
+                                                        class_mode = 'categorical')
 
         test_set = test_datagen.flow_from_directory('./manufacturing/dataset/test_oil_dataset',
                                                     target_size = (64, 64),
                                                     batch_size = 32,
-                                                    class_mode = 'binary')
-                                                    
-        test_set = test_datagen.flow_from_directory('dataset/test_oil_dataset',
-                                                target_size = (64, 64),
-                                                batch_size = 32,
-                                                class_mode = 'binary')
+                                                    class_mode = 'categorical')
 
-        filename = './training_oil_savemodel.sav'
-        load_model(filename)
+        filename = 'training_oil_savemodel.sav'
+
+        file = open(filename, 'rb')
+        loaded_model = pickle.load(file)
+
         loss, metric = loaded_model.evaluate_generator(generator=test_set, steps=80)
         print("Acurácia:" + str(metric))
 
@@ -139,184 +147,138 @@ def predict_oil_quality(request):
         pickle.dump(classifier, open(filename, 'wb'))
 
 
-        test_image = image.load_img(request_image, target_size=(64, 64))
+        test_image = image.load_img(request_image, target_size=(64, 64, 3))
         test_image = image.img_to_array(test_image)
         test_image = np.expand_dims(test_image, axis = 0)
 
-        with graph.as_default():
-            result = loaded_model.predict(test_image)
-        # K.clear_session()
+        result = loaded_model.predict(test_image)
 
         print(training_set.class_indices)
+        prediction = '?'
 
-        if result[0][0] == 0:
+        list_result = []
+
+        list_result.append(result[0][0])
+        list_result.append(result[0][1])
+        list_result.append(result[0][2])
+        
+        max_value = result[0][0]
+        max_indice = 0
+
+        for i in range(len(list_result)):
+            if list_result[i] > max_value:
+                max_value = list_result[i]
+                max_indice = i
+
+        print("Resultado:", list_result)
+        print("Maior Índice:", max_indice)
+
+        if max_indice == 0:
             prediction = "BAD"
-        elif result[0][0] == 1:
+        elif max_indice == 1:
             prediction = "GOOD"
-        elif result[0][0] == 2:
-            prediction = "MEDIUM"
-        else:
+        else: 
             prediction = "NO OIL"
+ 
 
         print("first single prediction is: ", prediction)
 
+        file.close()
+
+        K.clear_session()
+
         return Response(data=prediction, status=200)
     except Exception as e:
+        print(e)
         return Response(status=400)
 
-def load_model(filename):
-    global loaded_model
-    loaded_model = pickle.load(open(filename, 'rb'))
-    global graph
-    graph = tf.get_default_graph()
 
-    return loaded_model
-
-def random_search(request):
+@api_view(['GET'])
+def training_ph(request):
     try:
-        train = genfromtxt('ml-prove/train.csv', delimiter=',')
-        test = genfromtxt('ml-prove/test.csv', delimiter=',')
-        validation = genfromtxt('ml-prove/validation.csv', delimiter=',')
+        fabrications = Manufacturing.objects.all()
+        serializer = ManufacturingSerializer(fabrications, many=True)
 
-        # Separando targets e features:
+        manufacturing_list = pd.DataFrame(serializer.data)
 
-        validation_X = validation[:,0:-6]
-        validation_y = validation[:,-6:]
-
-        X_train = train[:,0:-6]
-        y_train_1 = train[:,-6:-5]
-        y_train_2 = train[:,-5:-4]
-        y_train_3 = train[:,-4:-3]
-        y_train_4 = train[:,-3:-2]
-        y_train_5 = train[:,-2:-1]
-        y_train_6 = train[:,-1:]
-
-        X_test = test[:,0:-6]
-        y_test_1 = test[:,-6:-5]
-        y_test_2 = test[:,-5:-4]
-        y_test_3 = test[:,-4:-3]
-        y_test_4 = test[:,-3:-2]
-        y_test_5 = test[:,-2:-1]
-        y_test_6 = test[:,-1:]
+        del manufacturing_list['id']
+        del manufacturing_list['oil_image']
+        del manufacturing_list['expected_ph']
+        del manufacturing_list['end_of_manufacture']
+        del manufacturing_list['start_of_manufacture']
 
 
-        #-----------------RandomForestClassifier-----------------#
+        oil_quality_list = [ 2 if x == 'GOOD' else 1 if x ==  'MEDIUM' else 0 for x in manufacturing_list['oil_quality']]
 
-        # quantidade de combinações de hyperparametros = 4320 * 6
+        manufacturing_list['oil_quality'] = oil_quality_list
 
-        params = {
-            'bootstrap': [True, False],
-            'max_depth': [10, 20, 30, 40, 50, 60, 70, 80, 90, 100, None],
-            'max_features': ['auto', 'sqrt'],
-            'min_samples_leaf': [1, 2, 4],
-            'min_samples_split': [2, 5, 10],
-            'n_estimators': [200, 400, 600, 800, 1000, 1200, 1400, 1600, 1800, 2000]
-        }
+        y = manufacturing_list['actual_ph']
 
-        clf = RandomForestClassifier()
+        del manufacturing_list['actual_ph']
 
-        rfc = RandomizedSearchCV(
-            estimator = clf, 
-            param_distributions = params, 
-            n_iter = 100,
-            cv = 3,
-            verbose=2,
-            random_state=42,
-            n_jobs = -1
+        X = manufacturing_list
+
+        gsc = GridSearchCV(
+            estimator=RandomForestRegressor(),
+            param_grid={
+                'max_depth': range(3,7),
+                'n_estimators': (10, 50, 100, 1000),
+            },
+            cv=5,
+            scoring='neg_mean_squared_error',
+            verbose=0,
+            n_jobs=-1
         )
 
-        dict_params = []
-        accuracy_list = []
-        time = []
+        grid_result = gsc.fit(X, y)
+        best_params = grid_result.best_params_
 
+        rfr = RandomForestRegressor(
+            max_depth=best_params["max_depth"],
+            n_estimators=best_params["n_estimators"],
+            random_state=False,
+            verbose=False
+        )
 
-        #--------------H1------------------#
+        rfr.fit(X, y)
 
-        rfc.fit(X_train, y_train_1.ravel())
+        filename = 'training_ph_savemodel.sav'
+        file = open(filename, 'wb')
+        pickle.dump(rfr, file)
 
-        dict_params.append(rfc.best_params_)
+        file.close()
 
-        score = rfc.score(X_test, y_test_1)
-
-        accuracy = score
-        accuracy_list.append(score)
-        time.append(rfc.refit_time_)
-
-        #--------------H2-----------------#
-
-        rfc.fit(X_train, y_train_2.ravel())
-
-        dict_params.append(rfc.best_params_)
-
-        score = rfc.score(X_test, y_test_2)
-
-        accuracy += score
-        accuracy_list.append(score)
-        time.append(rfc.refit_time_)
-
-        #--------------H3-----------------#
-
-        rfc.fit(X_train, y_train_3.ravel())
-
-        dict_params.append(rfc.best_params_)
-
-        score = rfc.score(X_test, y_test_3)
-
-        accuracy += score
-        accuracy_list.append(score)
-        time.append(rfc.refit_time_)
-
-        #--------------H4-----------------#
-
-        rfc.fit(X_train, y_train_4.ravel())
-
-        dict_params.append(rfc.best_params_)
-
-        score = rfc.score(X_test, y_test_4)
-
-        accuracy += score
-        accuracy_list.append(score)
-        time.append(rfc.refit_time_)
-
-        #--------------H5-----------------#
-
-        rfc.fit(X_train, y_train_5.ravel())
-
-        dict_params.append(rfc.best_params_)
-
-        score = rfc.score(X_test, y_test_5)
-
-        accuracy += score
-        accuracy_list.append(score)
-        time.append(rfc.refit_time_)
-
-        #-----------------H0-----------------#
-
-        rfc.fit(X_train, y_train_6.ravel())
-
-        dict_params.append(rfc.best_params_)
-
-        score = rfc.score(X_test, y_test_6)
-
-        accuracy += score
-        accuracy_list.append(score)
-        time.append(rfc.refit_time_)
-
-        print("--------")
-        print(accuracy/6.0)
-        print("--------")
-        print(dict_params)
-        print("--------")
-        print(accuracy_list)
-        print("--------")
-        print(time)
-        print("--------")
         return Response(status=200)
-    except Exception as e: 
+    except Exception as e:
+        print(e)
         return Response(status=400)
 
 
- 
+@api_view(['POST'])
+def predict_ph(request):
+    try:
+        filename = 'training_ph_savemodel.sav'
+
+        file = open(filename, 'rb')
+        loaded_model = pickle.load(file)
+
+        result = loaded_model.predict([request.data])
+
+        return Response(status=200)
+    except Exception as e:
+        print(e)
+        return Response(status=400)
+
+
+@api_view(['GET'])
+def index_manufacturing_month(request):
+    last_month = datetime.today() - timedelta(days=30)
+    fabrications = Manufacturing.objects.filter(start_of_manufacture__gte= last_month )
+    serializer = ManufacturingSerializer(fabrications, many=True)
+    return Response(serializer.data)
+
+
+
 class ManufacturingCreateList(APIView):
 
     def get(self, request, format=None):

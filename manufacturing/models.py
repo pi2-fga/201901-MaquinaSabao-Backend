@@ -1,16 +1,18 @@
 from django.db import models
 import os, os.path
+import shutil
+import datetime
 import requests
 import re
 from bs4 import BeautifulSoup as bs
 from bi.views import *
 
-# Create your models here.
+
 class Manufacturing(models.Model):
     start_of_manufacture = models.DateTimeField()
     end_of_manufacture = models.DateTimeField()
     amount_of_soap = models.DecimalField(decimal_places=2, max_digits=4)
-    expected_ph = models.DecimalField(decimal_places=2, max_digits=4)
+    expected_ph = models.DecimalField(decimal_places=2, max_digits=4, null=True ,blank=True)
     actual_ph = models.DecimalField(decimal_places=2, max_digits=4)
     oil_quality = models.CharField(max_length = 10)
     have_fragrance = models.BooleanField()
@@ -27,12 +29,19 @@ class Manufacturing(models.Model):
             good_folder.write(image)
 
         if(self.oil_quality == 'BAD'):
-            good_folder = open('dataset/training_oil_dataset/bad_oil/bad_oil_' + len(os.listdir('dataset/training_oil_dataset/bad_oil/')) + '.jpg', 'wb')
-            good_folder.write(image)
+            new_path = './manufacturing/dataset/training_oil_dataset/bad_oil/bad_oil_' + str(len(os.listdir('./manufacturing/dataset/training_oil_dataset/bad_oil/')) + 1) + '.jpg'
+            shutil.move(self.oil_image.name, new_path)
+            self.oil_image = new_path
 
         if(self.oil_quality == 'MEDIUM'):
-            good_folder = open('dataset/training_oil_dataset/medium_oil/medium_oil_' + len(os.listdir('dataset/training_oil_dataset/medium_oil/')) + '.jpg', 'wb')
-            good_folder.write(image)
+            new_path = './manufacturing/dataset/training_oil_dataset/medium_oil/medium_oil_' + str(len(os.listdir('./manufacturing/dataset/training_oil_dataset/medium_oil/')) + 1) + '.jpg'
+            shutil.move(self.oil_image.name, new_path)
+            self.oil_image = new_path
+
+        if(self.oil_quality == 'NO OIL'):
+            new_path = './manufacturing/dataset/training_oil_dataset/no_oil/no_oil_' + str(len(os.listdir('./manufacturing/dataset/training_oil_dataset/no_oil/')) + 1) + '.jpg'
+            shutil.move(self.oil_image.name, new_path)
+            self.oil_image = new_path
 
     def get_soap_price(self):
         lojas_americanas_url = requests.get("https://www.americanas.com.br/busca/desinfetantes-liquido")
@@ -69,6 +78,7 @@ class Manufacturing(models.Model):
             return (0.200 * soda_price)
         if self.amount_of_soap == 8:
             return (0.250 * soda_price)
+
 
 
     def save(self, *args, **kwargs):
