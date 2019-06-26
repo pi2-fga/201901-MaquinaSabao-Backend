@@ -44,7 +44,8 @@ class Manufacturing(models.Model):
             self.oil_image = new_path
 
     def get_soap_price(self):
-        lojas_americanas_url = requests.get("https://www.americanas.com.br/busca/desinfetantes-liquido")
+        headers = {'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.94 Safari/537.36'}
+        lojas_americanas_url = requests.get("https://www.americanas.com.br/busca/desinfetantes-liquido", headers=headers)
 
         soup = bs(lojas_americanas_url.content, 'html.parser')
 

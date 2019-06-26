@@ -8,7 +8,9 @@ from rest_framework.response import Response
 # Create your views here.
 
 def cheaper_soda_americanas():
-    lojas_americanas_url = requests.get("https://www.americanas.com.br/busca/soda-caustica")
+    headers = {
+        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.94 Safari/537.36'}
+    lojas_americanas_url = requests.get("https://www.americanas.com.br/busca/soda-caustica", headers=headers)
 
     soup = bs(lojas_americanas_url.content, 'html.parser')
 
