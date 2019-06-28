@@ -16,7 +16,8 @@ def cheaper_soda_americanas():
 
     product_list = soup.select("div.product-grid-item > div:nth-child(1)")
 
-    cheaper_product = {'item_description':'','item_volume':1, 'item_concentration':'', 'item_price':100,'item_link':''}
+    cheaper_product = {'item_description': '', 'item_volume': 1,
+                       'item_concentration': '', 'item_price': 100, 'item_link': '', 'item_img': ''}
 
     for item in product_list:
         item_name = item.get('name')
@@ -39,13 +40,18 @@ def cheaper_soda_americanas():
         
         if item.select_one('div.product-grid-item > div:nth-child(1) > div:nth-child(2) > a:nth-child(1)')['href']:
             item_link = "https://www.americanas.com.br" + item.select_one('div.product-grid-item > div:nth-child(1) > div:nth-child(2) > a:nth-child(1)')['href']
-
+        
+        img_url = requests.get(item_link, headers=headers)
+        soup_img = bs(img_url.content, 'html.parser')
+        item_img = soup_img.select_one(".image-gallery-image > img:nth-child(1)")['src']
+        
         if (item_name and item_price and item_concentration and item_volume) and ((item_price/item_volume) < (cheaper_product['item_price']/cheaper_product['item_volume'])):
             cheaper_product['item_description'] = item_name
             cheaper_product['item_volume'] = item_volume
             cheaper_product['item_concentration'] = item_concentration
             cheaper_product['item_price'] = item_price
             cheaper_product['item_link'] = item_link
+            cheaper_product['item_img'] = item_img
 
     return cheaper_product     
 
@@ -56,7 +62,8 @@ def cheaper_soda_ml():
 
     product_list = soup.select("li.results-item")
 
-    cheaper_product = {'item_description':'','item_volume':1, 'item_concentration':'', 'item_price':100,'item_link':''}
+    cheaper_product = {'item_description': '', 'item_volume': 1,
+                       'item_concentration': '', 'item_price': 100, 'item_link': '', 'item_img': ''}
 
     for item in product_list:
         item_name = item.select_one('span', class_='main-title').text
@@ -90,6 +97,13 @@ def cheaper_soda_ml():
             cheaper_product['item_price'] = item_price
             cheaper_product['item_link'] = item_link
 
+            img_url = requests.get(item_link)
+            soup_img = bs(img_url.content, 'html.parser')
+            if soup_img.select_one("label.gallery__thumbnail:nth-child(1) > img"):
+                cheaper_product['item_img'] = soup_img.select_one(
+                    "label.gallery__thumbnail:nth-child(1) > img")['src']
+
+
     return cheaper_product 
 
 @api_view(['GET'])
@@ -115,7 +129,8 @@ def get_cheaper_alcohol_ml(request):
 
     product_list = soup.select("li.results-item")
 
-    cheaper_product = {'item_description':'','item_volume':1, 'item_concentration':'', 'item_price':100,'item_link':''}
+    cheaper_product = {'item_description': '', 'item_volume': 1,
+                       'item_concentration': '', 'item_price': 100, 'item_link': '', 'item_img': ''}
 
     for item in product_list:
         item_name = item.select_one('span', class_='main-title').text
@@ -143,6 +158,11 @@ def get_cheaper_alcohol_ml(request):
             cheaper_product['item_concentration'] = item_concentration
             cheaper_product['item_price'] = item_price
             cheaper_product['item_link'] = item_link
+
+            img_url = requests.get(item_link)
+            soup_img = bs(img_url.content, 'html.parser')
+            if soup_img.select_one(".gallery-trigger"):
+                cheaper_product['item_img'] = soup_img.select_one(".gallery-trigger")['href']
 
     if cheaper_product['item_description'] == '':
         return Response(status=400)
