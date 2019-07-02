@@ -5,8 +5,6 @@ from bs4 import BeautifulSoup as bs
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
-# Create your views here.
-
 def cheaper_soda_americanas():
     headers = {
         'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.94 Safari/537.36'}
@@ -37,21 +35,22 @@ def cheaper_soda_americanas():
                 item_volume = float(re.search(r'((\d{1,3})\s*([Kk][Gg][Ss]?|[Gg]))', item_name).group(2))
             if re.search(r'(\d+)[x|X]', item_name):
                 item_volume = float(re.search(r'(\d+)[x|X]', item_name).group(1)) * item_volume
-        
+
         if item.select_one('div.product-grid-item > div:nth-child(1) > div:nth-child(2) > a:nth-child(1)')['href']:
             item_link = "https://www.americanas.com.br" + item.select_one('div.product-grid-item > div:nth-child(1) > div:nth-child(2) > a:nth-child(1)')['href']
-        
-        img_url = requests.get(item_link, headers=headers)
-        soup_img = bs(img_url.content, 'html.parser')
-        item_img = soup_img.select_one(".image-gallery-image > img:nth-child(1)")['src']
-        
+
         if (item_name and item_price and item_concentration and item_volume) and ((item_price/item_volume) < (cheaper_product['item_price']/cheaper_product['item_volume'])):
             cheaper_product['item_description'] = item_name
             cheaper_product['item_volume'] = item_volume
             cheaper_product['item_concentration'] = item_concentration
             cheaper_product['item_price'] = item_price
             cheaper_product['item_link'] = item_link
-            cheaper_product['item_img'] = item_img
+
+            img_url = requests.get(item_link, headers=headers)
+            soup_img = bs(img_url.content, 'html.parser')
+            if soup_img.select_one(".image-gallery-image > img:nth-child(1)"):
+                cheaper_product['item_img'] = soup_img.select_one(
+                    ".image-gallery-image > img:nth-child(1)")['src']
 
     return cheaper_product     
 
@@ -75,10 +74,10 @@ def cheaper_soda_ml():
                 '.' + item.find(class_='price__decimals').text)
         else:
             item_price = float(item.find(class_='price__fraction').text)
-        
+
         if re.search(r'9(8|9)\%', item_name):
             item_concentration = str(re.search(r'9(8|9)\%', item_name).group(0))
-        
+
         if re.search(r'((\d{1,3})\s*([Kk][Gg][Ss]?|[Gg]))', item_name):
             if re.search(r'((\d{1,3})\s*([Kk][Gg][Ss]?|[Gg]))', item_name).group(3) == ("G" or "g"):
                 item_volume = float(re.search(r'((\d{1,3})\s*([Kk][Gg][Ss]?|[Gg]))', item_name).group(2))/100
@@ -89,7 +88,7 @@ def cheaper_soda_ml():
 
         if item.select_one("div:nth-child(2) > div:nth-child(1) > h2:nth-child(1) > a:nth-child(1)"):
             item_link = item.select_one("div:nth-child(2) > div:nth-child(1) > h2:nth-child(1) > a:nth-child(1)")['href']
-        
+
         if (item_name and item_price and item_concentration and item_volume) and ((item_price/item_volume) < (cheaper_product['item_price']/cheaper_product['item_volume'])):
             cheaper_product['item_description'] = item_name
             cheaper_product['item_volume'] = item_volume
@@ -104,7 +103,7 @@ def cheaper_soda_ml():
                     "label.gallery__thumbnail:nth-child(1) > img")['src']
 
 
-    return cheaper_product 
+    return cheaper_product
 
 @api_view(['GET'])
 def get_cheaper_soda(request):
@@ -142,16 +141,16 @@ def get_cheaper_alcohol_ml(request):
                 '.' + item.find(class_='price__decimals').text)
         else:
             item_price = float(item.find(class_='price__fraction').text)
-        
+
         if re.search(r'(92\,?\.?8?)', item_name):
             item_concentration = str(re.search(r'(92\,?\.?8?)', item_name).group(0))
-        
+
         if re.search(r'(\d{1,4})\s?((Litros)|(LITROS)|l|L)\s', item_name):
             item_volume = float(re.search(r'(\d{1,4})\s?((Litros)|(LITROS)|l|L)\s', item_name).group(1))
 
         if item.select_one("div:nth-child(2) > div:nth-child(1) > h2:nth-child(1) > a:nth-child(1)"):
             item_link = item.select_one("div:nth-child(2) > div:nth-child(1) > h2:nth-child(1) > a:nth-child(1)")['href']
-        
+
         if (item_name and item_price and item_concentration and item_volume) and ((item_price/item_volume) < (cheaper_product['item_price']/cheaper_product['item_volume'])):
             cheaper_product['item_description'] = item_name
             cheaper_product['item_volume'] = item_volume
@@ -167,4 +166,4 @@ def get_cheaper_alcohol_ml(request):
     if cheaper_product['item_description'] == '':
         return Response(status=400)
     else:
-        return Response(cheaper_product, status=200) 
+        return Response(cheaper_product, status=200)

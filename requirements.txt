@@ -9,3 +9,4 @@ beautifulsoup4
 sklearn
 tabula
 pandas
+psycopg2

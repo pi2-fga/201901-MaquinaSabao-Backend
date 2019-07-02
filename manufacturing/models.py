@@ -12,7 +12,6 @@ class Manufacturing(models.Model):
     start_of_manufacture = models.DateTimeField()
     end_of_manufacture = models.DateTimeField()
     amount_of_soap = models.DecimalField(decimal_places=2, max_digits=4)
-    expected_ph = models.DecimalField(decimal_places=2, max_digits=4, null=True ,blank=True)
     actual_ph = models.DecimalField(decimal_places=2, max_digits=4)
     oil_quality = models.CharField(max_length = 10)
     have_fragrance = models.BooleanField()
@@ -22,19 +21,14 @@ class Manufacturing(models.Model):
     internet_alcohol_price = models.DecimalField(decimal_places=8, max_digits=12, blank=True)
 
     def reallocate_image(self):
-        image = open('static/oil_images/' + self.oil_image.name, 'rb').read()
-        
+        image = open(self.oil_image.name, 'rb').read()
+
         if(self.oil_quality == 'GOOD'):
-            good_folder = open('dataset/training_oil_dataset/good_oil/good_oil_' + len(os.listdir('dataset/training_oil_dataset/good_oil/')) + '.jpg', 'wb')
+            good_folder = open('./manufacturing/dataset/training_oil_dataset/good_oil/good_oil_' + str(len(os.listdir('./manufacturing/dataset/training_oil_dataset/good_oil/'))) + '.jpg', 'wb')
             good_folder.write(image)
 
         if(self.oil_quality == 'BAD'):
             new_path = './manufacturing/dataset/training_oil_dataset/bad_oil/bad_oil_' + str(len(os.listdir('./manufacturing/dataset/training_oil_dataset/bad_oil/')) + 1) + '.jpg'
-            shutil.move(self.oil_image.name, new_path)
-            self.oil_image = new_path
-
-        if(self.oil_quality == 'MEDIUM'):
-            new_path = './manufacturing/dataset/training_oil_dataset/medium_oil/medium_oil_' + str(len(os.listdir('./manufacturing/dataset/training_oil_dataset/medium_oil/')) + 1) + '.jpg'
             shutil.move(self.oil_image.name, new_path)
             self.oil_image = new_path
 
@@ -65,7 +59,7 @@ class Manufacturing(models.Model):
                         r'((\d{1,4})\s*(ml|ML|Ml|Litros|litros|L|l))', item_name).group(2))*1000
                 else:
                     item_volume = float(re.search(r'((\d{1,4})\s*(ml|ML|Ml|Litros|litros|L|l))', item_name).group(2))
-                
+
             if (item_name and item_price and item_volume) and ((item_price/item_volume) < (cheaper_product['item_price']/cheaper_product['item_volume'])):
                 cheaper_product['item_description'] = item_name
                 cheaper_product['item_volume'] = item_volume
@@ -87,6 +81,6 @@ class Manufacturing(models.Model):
         alcohol_price = requests.get('http://0.0.0.0:8000/get_cheaper_alcohol_ml/').json()
         self.internet_soda_price = self.get_ammount_of_soda(soda_price['item_price']/soda_price['item_volume'])
         self.internet_alcohol_price = (float(self.amount_of_soap) * 0.0625)*(alcohol_price['item_price']/alcohol_price['item_volume'])
-        self.internet_soap_price = (self.get_soap_price() * float(self.amount_of_soap) * 1000.00) 
+        self.internet_soap_price = (self.get_soap_price() * float(self.amount_of_soap) * 1000.00)
         super(Manufacturing, self).save(*args, **kwargs)
         self.reallocate_image()
