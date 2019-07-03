@@ -1,0 +1,12 @@
+Django==2.2
+djangorestframework==3.9.2
+keras
+numpy
+tensorflow
+Pillow
+requests
+beautifulsoup4
+sklearn
+tabula
+pandas
+psycopg2
