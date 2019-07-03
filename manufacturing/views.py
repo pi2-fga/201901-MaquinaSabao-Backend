@@ -162,7 +162,7 @@ def predict_oil_quality(request):
         list_result.append(result[0][0])
         list_result.append(result[0][1])
         list_result.append(result[0][2])
-        
+
         max_value = result[0][0]
         max_indice = 0
 
@@ -178,9 +178,9 @@ def predict_oil_quality(request):
             prediction = "BAD"
         elif max_indice == 1:
             prediction = "GOOD"
-        else: 
+        else:
             prediction = "NO OIL"
- 
+
 
         print("first single prediction is: ", prediction)
 
@@ -292,5 +292,5 @@ class ManufacturingCreateList(APIView):
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=201)
-        
+
         return Response(serializer.errors, status=400)

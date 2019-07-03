@@ -6,9 +6,8 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
 def cheaper_soda_americanas():
-    headers = {
-        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.94 Safari/537.36'}
-    lojas_americanas_url = requests.get("https://www.americanas.com.br/busca/soda-caustica", headers=headers)
+    headers = {'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.94 Safari/537.36'}
+    lojas_americanas_url = requests.get("https://www.americanas.com.br/busca/soda-caustica", allow_redirects=False, headers=headers)
 
     soup = bs(lojas_americanas_url.content, 'html.parser')
 
@@ -52,7 +51,7 @@ def cheaper_soda_americanas():
                 cheaper_product['item_img'] = soup_img.select_one(
                     ".image-gallery-image > img:nth-child(1)")['src']
 
-    return cheaper_product     
+    return cheaper_product
 
 def cheaper_soda_ml():
     mercado_livre_url = requests.get("https://lista.mercadolivre.com.br/soda-caustica")
@@ -107,15 +106,11 @@ def cheaper_soda_ml():
 
 @api_view(['GET'])
 def get_cheaper_soda(request):
-    cheaper_americanas = cheaper_soda_americanas()
     cheaper_ml = cheaper_soda_ml()
-    if cheaper_americanas['item_description'] == '' and cheaper_ml['item_description'] == '':
+    if cheaper_ml['item_description'] == '':
         return Response(status=400)
     else:
-        if (cheaper_americanas['item_price']/cheaper_americanas['item_volume']) < (cheaper_ml['item_price']/cheaper_ml['item_volume']):
-            return Response(cheaper_americanas, status=200)
-        else:
-            return Response(cheaper_ml, status=200)
+        return Response(cheaper_ml, status=200)
 
 
 
