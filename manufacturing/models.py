@@ -19,6 +19,7 @@ class Manufacturing(models.Model):
     internet_soap_price = models.DecimalField(decimal_places=8, max_digits=12, blank=True)
     internet_soda_price = models.DecimalField(decimal_places=8, max_digits=12, blank=True)
     internet_alcohol_price = models.DecimalField(decimal_places=8, max_digits=12, blank=True)
+    device_id = models.CharField(max_length = 100)
 
     def reallocate_image(self):
         image = open(self.oil_image.name, 'rb').read()

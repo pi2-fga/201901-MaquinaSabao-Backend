@@ -274,7 +274,12 @@ def predict_ph(request):
 @api_view(['GET'])
 def index_manufacturing_month(request):
     last_month = datetime.today() - timedelta(days=30)
-    fabrications = Manufacturing.objects.filter(start_of_manufacture__gte= last_month )
+
+    if request.GET.get('device_id'):
+        fabrications = Manufacturing.objects.filter(device_id=request.GET.get('device_id'), start_of_manufacture__gte= last_month)
+    else:
+        fabrications = Manufacturing.objects.filter(start_of_manufacture__gte= last_month)
+
     serializer = ManufacturingSerializer(fabrications, many=True)
     return Response(serializer.data)
 
@@ -283,7 +288,10 @@ def index_manufacturing_month(request):
 class ManufacturingCreateList(APIView):
 
     def get(self, request, format=None):
-        fabrications = Manufacturing.objects.all()
+        if request.GET.get('device_id'):
+            fabrications = Manufacturing.objects.filter(device_id=request.GET.get('device_id'))
+        else:
+            fabrications = Manufacturing.objects.all()
         serializer = ManufacturingSerializer(fabrications, many=True)
         return Response(serializer.data)
 
