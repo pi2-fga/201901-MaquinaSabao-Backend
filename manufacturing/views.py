@@ -117,36 +117,12 @@ def predict_oil_quality(request):
     try:
         K.clear_session()
 
-        train_datagen = ImageDataGenerator(rescale = 1./255,
-                                        shear_range = 0.2,
-                                        zoom_range = 0.2,
-                                        horizontal_flip = True)
-
-        test_datagen = ImageDataGenerator(rescale = 1./255)
-
-        training_set = train_datagen.flow_from_directory('./manufacturing/dataset/training_oil_dataset',
-                                                        target_size = (64, 64),
-                                                        batch_size = 32,
-                                                        class_mode = 'categorical')
-
-        test_set = test_datagen.flow_from_directory('./manufacturing/dataset/test_oil_dataset',
-                                                    target_size = (64, 64),
-                                                    batch_size = 32,
-                                                    class_mode = 'categorical')
-
         filename = 'training_oil_savemodel.sav'
 
         file = open(filename, 'rb')
         loaded_model = pickle.load(file)
 
-        loss, metric = loaded_model.evaluate_generator(generator=test_set, steps=80)
-        print("Acurácia:" + str(metric))
-
-        # Comente essa linha para testes com o script 'predictImage.sh'
         request_image = request.FILES['photo']
-
-        # Descomente essa linha para testes com o script 'predictImage.sh'
-        # request_image = request.data['photo']
 
         test_image = image.load_img(request_image, target_size=(64, 64, 3))
         test_image = image.img_to_array(test_image)
@@ -154,7 +130,6 @@ def predict_oil_quality(request):
 
         result = loaded_model.predict(test_image)
 
-        print(training_set.class_indices)
         prediction = '?'
 
         list_result = []
@@ -170,9 +145,6 @@ def predict_oil_quality(request):
             if list_result[i] > max_value:
                 max_value = list_result[i]
                 max_indice = i
-
-        print("Resultado:", list_result)
-        print("Maior Índice:", max_indice)
 
         if max_indice == 0:
             prediction = "BAD"
