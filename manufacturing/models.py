@@ -52,7 +52,7 @@ class Manufacturing(models.Model):
             item_name = item.select_one(
                 'h2', class_='item__title list-view-item-title').text
             item_volume = None
-
+            print(item_name)
             if item.find(class_='price__decimals'):
                     item_price = float(item.find(class_='price__fraction').text +
                                     '.' + item.find(class_='price__decimals').text)
@@ -60,14 +60,14 @@ class Manufacturing(models.Model):
                 item_price = float(item.find(class_='price__fraction').text)
 
             if re.search(r'((\d{1,4})\s*(ml|ML|Ml|Litros|litros|L|l))', item_name):
-                if re.search(r'((\d{1,4})\s*(ml|ML|Ml|Litros|litros|L|l))', item_name).group(3) in ['Litros', 'litros', 'L', 'l']:
+                if re.search(r'((\d{1,4})\s*(ml|ML|Ml|Litros|litros|L|l))', item_name).group(3) in ['Litros', 'litros', 'L', 'lt','l']:
                     item_volume = float(re.search(
                         r'((\d{1,4})\s*(ml|ML|Ml|Litros|litros|L|l))', item_name).group(2))*1000
                 else:
                     item_volume = float(
                         re.search(r'((\d{1,4})\s*(ml|ML|Ml|Litros|litros|L|l))', item_name).group(2))
 
-            if (item_name and item_price and item_volume) and ((item_price/item_volume) < (cheaper_product['item_price']/cheaper_product['item_volume'])):
+            if (item_name and item_price and item_volume) and ((item_price/item_volume) < (cheaper_product['item_price']/cheaper_product['item_volume'])) and (re.search(r'kg|KG|Kg', item_name) is None):
                 cheaper_product['item_description'] = item_name
                 cheaper_product['item_volume'] = item_volume
                 cheaper_product['item_price'] = item_price
