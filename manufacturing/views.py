@@ -36,6 +36,8 @@ import pandas as pd
 from datetime import datetime, timedelta
 from django.utils import timezone
 
+from imageai.Prediction.Custom import CustomImagePrediction
+
 def training_oil_quality(request):
     try:
         # Convolutional Neural Network
@@ -109,58 +111,52 @@ def training_oil_quality(request):
 
     except Exception as e :
         print("error>>>>>")
-        printe(e)
+        print(e)
         return Response(status=400)
 
 @api_view(['POST'])
 def predict_oil_quality(request):
     try:
-        K.clear_session()
 
-        filename = 'training_oil_savemodel.sav'
-
-        file = open(filename, 'rb')
-        loaded_model = pickle.load(file)
-
+        filename = 'model_ex-003_acc-0.677249.h5'
         request_image = request.FILES['photo']
+        #request_image = request.data['photo']
 
-        test_image = image.load_img(request_image, target_size=(64, 64, 3))
-        test_image = image.img_to_array(test_image)
-        test_image = np.expand_dims(test_image, axis = 0)
+        path = request_image.file.name
+        print("path: " + path)
+        
+       # test_image = image.load_img(request_image, target_size=(64, 64, 3))
+        #test_image = image.img_to_array(test_image)
+        #test_image = np.expand_dims(test_image, axis = 0)
+        
+        execution_path = os.getcwd()
 
-        result = loaded_model.predict(test_image)
+        prediction = CustomImagePrediction()
+        prediction.setModelTypeAsResNet()
+        prediction.setModelPath(filename)
+        prediction.setJsonPath("model_class.json")
+        prediction.loadModel(num_objects=3)
+        
+       # predictions, probabilities = prediction.predictImage(os.path.join(execution_path, request_image), result_count=3)
+        predictions, probabilities = prediction.predictImage(path, result_count=3)
 
-        prediction = '?'
+        result = 0
+        result_text = ''
 
-        list_result = []
+        for eachPrediction, eachProbability in zip(predictions, probabilities):
+            if(eachProbability > result):
+                result = eachProbability
+                result_text = eachPrediction
 
-        list_result.append(result[0][0])
-        list_result.append(result[0][1])
-        list_result.append(result[0][2])
-
-        max_value = result[0][0]
-        max_indice = 0
-
-        for i in range(len(list_result)):
-            if list_result[i] > max_value:
-                max_value = list_result[i]
-                max_indice = i
-
-        if max_indice == 0:
-            prediction = "BAD"
-        elif max_indice == 1:
-            prediction = "GOOD"
+        if(result_text == 'good_oil'):
+            result_text = 'GOOD'
+        elif(result_text == 'bad_oil'):
+            result_text = 'BAD'
         else:
-            prediction = "NO OIL"
+            result_text = 'NO OIL'
 
 
-        print("first single prediction is: ", prediction)
-
-        file.close()
-
-        K.clear_session()
-
-        return Response(data=prediction, status=200)
+        return Response(data=result_text, status=200)
     except Exception as e:
         print(e)
         return Response(status=400)

@@ -10,3 +10,6 @@ sklearn
 tabula
 pandas
 psycopg2
+scipy
+opencv-python
+h5py
